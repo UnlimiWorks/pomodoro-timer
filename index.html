@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Pomodoro-Style Timer by unlimiworks</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link href="app.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <h1 class="title">Pomodoro-Style Timer</h1>
+
+    <div class="container-fluid text-center">
+    	<div id="options" class="row">
+    		<div id="break" class="col-xs-6 col-sm-offset-3 col-sm-3">
+    			<p>Break length</p>
+    			<button>-</button>
+    			<span>5</span>
+    			<button>+</button>
+    		</div>
+    		<div id="session" class="col-xs-6 col-sm-3">
+    			<p>Work length</p>
+    			<button>-</button>
+    			<span>25</span>
+    			<button>+</button>
+    		</div>
+    	</div>
+    	<button id="display">
+    		<div>
+    			<h1 class="lead">Start Timer</h1>
+    			<p>25:00</p>
+    		</div>
+    	</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
