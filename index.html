@@ -12,24 +12,24 @@
     <h1 class="title">Pomodoro-Style Timer</h1>
 
     <div class="container-fluid text-center">
-    	<div id="options" class="row">
-    		<div id="break" class="col-xs-6 col-sm-offset-3 col-sm-3">
-    			<p>Break length</p>
-    			<button>-</button>
-    			<span>5</span>
-    			<button>+</button>
+    	<div class="row">
+    		<div class="col-xs-6 col-sm-offset-3 col-sm-3">
+    			<p>rest length</p>
+    			<button class="rest-controls">-</button>
+    			<span id="rest-duration">5</span>
+    			<button class="rest-controls">+</button>
     		</div>
-    		<div id="session" class="col-xs-6 col-sm-3">
+    		<div class="col-xs-6 col-sm-3">
     			<p>Work length</p>
-    			<button>-</button>
-    			<span>25</span>
-    			<button>+</button>
+    			<button class="work-controls">-</button>
+          <span id="work-duration">25</span>
+    			<button class="work-controls">+</button>
     		</div>
     	</div>
     	<button id="display">
     		<div>
-    			<h1 class="lead">Start Timer</h1>
-    			<p>25:00</p>
+    			<h1 id ="phase" class="lead">Start Timer</h1>
+    			<p id="time">25:00</p>
     		</div>
     	</button>
     </div>
