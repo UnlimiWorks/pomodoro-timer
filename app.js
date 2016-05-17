@@ -4,7 +4,17 @@ var pomodoroTimer = (function IIFE () {
   var $variables = {}
   var timer = {work : {}, rest : {}}
 
-  function updatePhaseDuration (JQueryTarget, minutes) {
+  // for css animation only
+  function applyGradient () {
+    $variables.timerButton.css(
+      'background-image',
+      'linear-gradient(to top, rgb(1, 188, 172) ' +
+      (100 - timer.remainingTime / (timer[timer.currentPhase || 'work'].duration * 60) * 100) + '%, ' +
+      '#444 0%)'
+    )
+  }
+  
+  function updateSessionDuration (JQueryTarget, minutes) {
     JQueryTarget.text(minutes)
   }
 
@@ -55,6 +65,7 @@ var pomodoroTimer = (function IIFE () {
       alarm.play()
     }
     updateDisplayedTime()
+    applyGradient()
   }
 
   function startTimer () {
@@ -91,8 +102,7 @@ var pomodoroTimer = (function IIFE () {
       updateDisplayedTime(session.duration)
     }
 
-    // Update options' display value
-    updatePhaseDuration(JQueryElement, session.duration)
+    updateSessionDuration(JQueryElement, session.duration)
   }
 
   function init (options) {
