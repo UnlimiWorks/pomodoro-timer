@@ -1,109 +1,138 @@
-var sessionTime, breakTime, remainingTime, timerFunction, timerWorking
+'use strict'
 
-// Phase specific variables
-var timerPhases = ['work', 'break']
-var currentPhase
+var pomodoroTimer = (function IIFE () {
+  var $variables = {}
+  var timer = {work : {}, rest : {}}
 
-$('#display').click(function () {
-  if (remainingTime === undefined || remainingTime === null) {
-    timerFunction = timerStart($('#session > span').text() * 60, $('#break > span').text() * 60)
-  } else if (!timerWorking) {
-    timerFunction = timerResume()
-  } else {
-    timerPause(timerFunction)
+  function updatePhaseDuration (JQueryTarget, minutes) {
+    JQueryTarget.text(minutes)
   }
-})
 
-$('#options button').click(function () {
-  // Store and verify the integrity of the new value
-  var newValue = eval($(this).parent().children('span').text() + $(this).text() + 1) * 60
-  newValue = newValue < 60 ? 60 : newValue
+  function togglePhaseControls () {
+    $variables.workControls.attr('disabled', !$variables.workControls.attr('disabled'))
+    $variables.restControls.attr('disabled', !$variables.restControls.attr('disabled'))
+  }
 
-  // If a session's length changed, update session's time variable
-  if ($(this).parent().attr('id') === $('#session').attr('id')) {
-    // if it's the current phase, update main display
-    if (currentPhase === timerPhases[0] || currentPhase === undefined) {
-      // if paused, reset timer
-      if (remainingTime !== undefined) {
-        remainingTime = newValue
+  function updateDisplayedTime (minutes) {
+    var display = minutes * 60 || timer.remainingTime
+
+    $variables.timeDisplay.text(Math.floor(display / 60) + ':' +
+      (display % 60 > 9 ? display % 60 : '0' + display % 60))
+  }
+
+  function updateDisplayedPhase () {
+    $variables.phaseDisplay.text(timer.currentPhase.charAt(0).toUpperCase() + timer.currentPhase.slice(1).toLowerCase() + ' Session')
+  }
+
+  function haltTimer () {
+    timer.working = false
+    clearInterval(timer.loopingFunction)
+
+    togglePhaseControls()
+  }
+
+  function resumeTimer () {
+    timer.working = true
+
+    togglePhaseControls()
+    return setInterval(updateTimer, 1000)
+  }
+
+  function updateTimer () {
+    timer.remainingTime -= 1
+    if (timer.remainingTime < 0) {
+      if (timer.currentPhase === 'work') {
+        timer.remainingTime = timer.rest.duration * 60
+        timer.currentPhase = 'rest'
+      } else {
+        timer.remainingTime = timer.work.duration * 60
+        timer.currentPhase = 'work'
       }
-      displayTimerUpdate(newValue)
+
+      updateDisplayedPhase()
+      haltTimer()
+      var alarm = new Audio(timer.alarmUrl)
+      alarm.play()
     }
-    sessionTime = newValue
-  } else {
-    if (currentPhase === timerPhases[1] && remainingTime !== undefined) {
-      remainingTime = newValue
-      displayTimerUpdate(newValue)
-    }
-    breakTime = newValue
+    updateDisplayedTime()
   }
 
-  // Update options' display value
-  optionsUpdate(this, newValue)
-})
+  function startTimer () {
+    timer.remainingTime = timer.work.duration * 60
+    timer.currentPhase = 'work'
+    timer.working = true
 
-/* Utility functions */
-/* Timer specific */
-function timerUpdate () {
-  this.remainingTime -= 1
-  if (this.remainingTime < 0) {
-    if (this.currentPhase === this.timerPhases[0]) {
-      this.remainingTime = breakTime
+    togglePhaseControls()
+    updateDisplayedPhase()
+    return setInterval(updateTimer, 1000)
+  }
+
+  function handleTimerButton (event) {
+    if (timer.remainingTime === undefined) {
+      timer.loopingFunction = startTimer()
+    } else if (!timer.working) {
+      timer.loopingFunction = resumeTimer()
     } else {
-      this.remainingTime = sessionTime
+      haltTimer()
     }
-    this.currentPhase = this.timerPhases[(this.timerPhases.indexOf(this.currentPhase) + 1) % 2]
-
-    // Update display, pause timer and play sound
-    displayMessageUpdate(this.currentPhase)
-    this.timerPause(this.timerFunction)
-    var alarm = new Audio('http://www.freesound.org/data/previews/254/254819_4597795-lq.mp3')
-    alarm.play()
   }
 
-  // Update view
-  this.displayTimerUpdate(this.remainingTime)
-}
+  function handleControls (event, JQueryElement, session, isCurrentPhase) {
+    if (event.target.innerText === '+') {
+      session.duration = Math.min(parseInt(JQueryElement.text(), 10) + 1, 60)
+    } else if (event.target.innerText === '-') {
+      session.duration = Math.max(parseInt(JQueryElement.text(), 10) - 1, 1)
+    }
 
-function timerStart (sessionTime, breakTime) {
-  this.remainingTime = sessionTime = sessionTime
-  breakTime = breakTime
-  this.timerWorking = true
-  optionsDisable(this.timerWorking)
-  this.currentPhase = this.timerPhases[0]
+    if (isCurrentPhase) {
+      if (timer.remainingTime !== undefined) {
+        timer.remainingTime = session.duration * 60
+      }
+      updateDisplayedTime(session.duration)
+    }
 
-  displayMessageUpdate(this.currentPhase)
-  return setInterval(timerUpdate, 1000)
-}
+    // Update options' display value
+    updatePhaseDuration(JQueryElement, session.duration)
+  }
 
-function timerPause (timerFunction) {
-  this.timerWorking = false
-  optionsDisable(this.timerWorking)
+  function init (options) {
+    $variables.timerButton = $(options.timerButton)
+    $variables.phaseDisplay = $(options.phaseDisplay)
+    $variables.timeDisplay = $(options.timeDisplay)
+    $variables.workTime = $(options.workTime)
+    $variables.restTime = $(options.restTime)
+    $variables.workControls = $(options.workControls)
+    $variables.restControls = $(options.restControls)
 
-  clearInterval(timerFunction)
-}
+    timer.alarmUrl = options.alarmUrl
+    timer.work.duration = parseInt($variables.workTime.text(), 10)
+    timer.rest.duration = parseInt($variables.restTime.text(), 10)
 
-function timerResume () {
-  this.timerWorking = true
-  optionsDisable(this.timerWorking)
-  $('.paused').css('visibility', 'hidden')
+    $variables.timerButton.bind('click', handleTimerButton)
 
-  return setInterval(timerUpdate, 1000)
-}
+    $variables.workControls.bind('click', function (event) {
+      handleControls(event, $variables.workTime, timer.work, timer.currentPhase === 'work' || timer.currentPhase === undefined)
+    })
 
-/* View specific */
-function optionsUpdate (button, seconds) {
-  $(button).parent().children('span').text(seconds / 60)
-}
+    $variables.restControls.bind('click', function (event) {
+      handleControls(event, $variables.restTime, timer.rest, timer.currentPhase === 'rest')
+    })
+  }
 
-function optionsDisable (state) {
-  $('#options button').attr('disabled', state)
-}
+  return {
+    init: init
+  }
+}())
 
-function displayTimerUpdate (seconds) {
-  $('#display p').text(Math.floor(seconds / 60) + ':' + (seconds % 60 > 9 ? seconds % 60 : '0' + seconds % 60))
-}
-
-function displayMessageUpdate (phase) {
-  $('#display h1').text(phase.charAt(0).toUpperCase() + phase.slice(1).toLowerCase() + ' Time')
-}
+$(document).ready(function () {
+  pomodoroTimer.init({
+    timerButton: '#display',
+    phaseDisplay: '#phase',
+    timeDisplay: '#time',
+    workTime: '#work-duration',
+    restTime: '#rest-duration',
+    workControls: '.work-controls',
+    restControls: '.rest-controls',
+    alarmUrl: 'http://www.freesound.org/data/previews/254/254819_4597795-lq.mp3'
+  })
+})
